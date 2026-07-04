@@ -2,7 +2,8 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { initials, type Profile } from "@/lib/profile";
+import { displayName, initials, type Profile } from "@/lib/profile";
+import CallProvider from "@/components/app/CallProvider";
 
 /**
  * Responsive app chrome. On desktop the sidebar is a static column and the right
@@ -25,6 +26,7 @@ export default function AppShellClient({
   const [open, setOpen] = useState(false);
 
   return (
+    <CallProvider me={{ id: profile.id, name: displayName(profile), avatar: profile.avatar_url }}>
     <div className="flex h-[100dvh] overflow-hidden bg-void text-gray-200">
       {/* Sidebar: static on md+, off-canvas drawer on mobile */}
       <div
@@ -96,5 +98,6 @@ export default function AppShellClient({
 
       {rightbar}
     </div>
+    </CallProvider>
   );
 }

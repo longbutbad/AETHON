@@ -195,6 +195,15 @@ export default function Messages({ me }: { me: Profile }) {
                 conversationId={active.id}
                 title={active.other ? displayName(active.other) : "Operator"}
                 subtitle={active.other?.username ? `@${active.other.username}` : undefined}
+                callTarget={
+                  active.other
+                    ? {
+                        id: active.other.id,
+                        name: displayName(active.other),
+                        avatar: active.other.avatar_url,
+                      }
+                    : undefined
+                }
               />
             </div>
           </>

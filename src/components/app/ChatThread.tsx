@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { displayName, initials, type Profile } from "@/lib/profile";
 import { bumpQuest } from "@/lib/quests";
+import { useCall, type CallPeer } from "@/components/app/CallProvider";
 
 type Msg = {
   id?: string;
@@ -35,6 +36,7 @@ export default function ChatThread({
   subtitle,
   titlePrefix = "",
   selfJoin = false,
+  callTarget,
 }: {
   me: Profile;
   conversationId: string;
@@ -42,8 +44,10 @@ export default function ChatThread({
   subtitle?: string;
   titlePrefix?: string;
   selfJoin?: boolean;
+  callTarget?: CallPeer;
 }) {
   const supabase = createClient();
+  const { startCall } = useCall();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({ [me.id]: me });
   const [text, setText] = useState("");
@@ -160,9 +164,18 @@ export default function ChatThread({
           <div className="text-sm font-bold text-gray-100">{title}</div>
           {subtitle && <div className="text-[11px] text-gray-600">{subtitle}</div>}
         </div>
-        <div className="flex gap-3 text-gray-500">
+        <div className="flex items-center gap-3 text-gray-500">
+          {callTarget && (
+            <button
+              onClick={() => startCall(callTarget)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
+              title={`Call ${callTarget.name}`}
+              aria-label="Start call"
+            >
+              📞
+            </button>
+          )}
           <span>📌</span>
-          <span>👥</span>
           <span>⌕</span>
           <span>⋯</span>
         </div>
