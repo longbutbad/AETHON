@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { displayName, initials, type Profile } from "@/lib/profile";
+import { bumpQuest } from "@/lib/quests";
 
 type Friendship = {
   id: string;
@@ -95,6 +96,7 @@ export default function Friends({ me }: { me: Profile }) {
       .from("friendships")
       .insert({ requester_id: me.id, addressee_id: other.id });
     if (error && error.code !== "23505") console.error(error.message);
+    else bumpQuest("friend");
     loadAll();
   };
 

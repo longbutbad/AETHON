@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { bumpQuest } from "@/lib/quests";
 
 const GAMES = [
   { id: "ttt", name: "Tic-Tac-Toe", glyph: "⭕", desc: "Beat the CPU." },
@@ -93,6 +94,13 @@ function TicTacToe() {
   const full = board.every(Boolean);
   const over = !!win || full;
 
+  useEffect(() => {
+    bumpQuest("game");
+  }, []);
+  useEffect(() => {
+    if (win === "X") bumpQuest("win");
+  }, [win]);
+
   const play = (i: number) => {
     if (board[i] || over) return;
     const next = board.slice();
@@ -151,6 +159,10 @@ function MemoryMatch() {
   const [matched, setMatched] = useState<Set<number>>(new Set());
   const [moves, setMoves] = useState(0);
   const won = matched.size === cards.length;
+
+  useEffect(() => {
+    bumpQuest("game");
+  }, []);
 
   useEffect(() => {
     if (flipped.length !== 2) return;

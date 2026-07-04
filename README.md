@@ -87,9 +87,34 @@ src/
   middleware.ts           # refreshes the session + guards protected routes
 ```
 
+## Deploy to Vercel
+
+Vercel auto-detects Next.js — there's no `vercel.json` to write. Steps:
+
+1. Push this repo to GitHub (already done).
+2. On [vercel.com](https://vercel.com) → **Add New… → Project** → import the
+   `AETHON` repo. Framework preset **Next.js** is detected automatically.
+3. **Environment Variables** — add these (from your Supabase project's
+   Settings → API). They are *not* in the repo, so you must set them here:
+
+   | Name | Value |
+   | --- | --- |
+   | `NEXT_PUBLIC_SUPABASE_URL` | `https://<your-project>.supabase.co` |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | your anon public key |
+
+4. Click **Deploy**. You'll get a URL like `https://aethon.vercel.app`.
+5. In **Supabase → Authentication → URL Configuration**, add your Vercel URL to
+   **Site URL** and **Redirect URLs** (needed if you later enable magic-link /
+   OAuth; password login works without it).
+
+Run the SQL scripts in [`supabase/`](supabase/) once against your project if you
+haven't (setup, communities, friends, notifications, stats).
+
 ## Notes
 
 - Auth state is managed with `@supabase/ssr` (cookie-based) so Server Components
   can read the signed-in user and middleware can refresh sessions.
 - The neon look (animated canvas background, HUD frame, angled buttons) is a
   Tailwind reimplementation of the prototype's inline CSS.
+- `.env.local` is gitignored; deployments read the two `NEXT_PUBLIC_*` vars from
+  the host's environment (Vercel project settings).

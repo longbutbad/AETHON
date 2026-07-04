@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { displayName, initials, type Profile } from "@/lib/profile";
+import { bumpQuest } from "@/lib/quests";
 
 type Msg = {
   id?: string;
@@ -147,6 +148,7 @@ export default function ChatThread({
       .from("messages")
       .insert({ conversation_id: conversationId, sender_id: me.id, content });
     if (error) console.error(error.message);
+    else bumpQuest("message");
   };
 
   return (
