@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aethon Sign-In Link</title>
+</head>
+<body style="margin:0;padding:0;background:#03030a;font-family:'Segoe UI',Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#03030a;min-height:100vh;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background:#06040e;border-radius:20px;border:1px solid rgba(139,92,246,0.3);overflow:hidden;">
+
+          <tr>
+            <td style="height:3px;background:linear-gradient(90deg,#7c3aed,#8b5cf6,#06b6d4);font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding:36px 32px 24px;">
+              <div style="margin-bottom:14px;">
+                <svg viewBox="0 0 100 94" xmlns="http://www.w3.org/2000/svg" width="56" height="53" style="display:block;margin:0 auto;">
+                  <defs>
+                    <linearGradient id="lgL" x1="0%" y1="100%" x2="50%" y2="0%">
+                      <stop offset="0%" stop-color="#d946ef"/>
+                      <stop offset="100%" stop-color="#a855f7"/>
+                    </linearGradient>
+                    <linearGradient id="lgR" x1="50%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#22d3ee"/>
+                      <stop offset="100%" stop-color="#0284c7"/>
+                    </linearGradient>
+                  </defs>
+                  <line x1="50" y1="4"  x2="4"  y2="91" stroke="url(#lgL)" stroke-width="7" stroke-linecap="butt"/>
+                  <line x1="4"  y1="91" x2="43" y2="91" stroke="url(#lgL)" stroke-width="7" stroke-linecap="butt"/>
+                  <line x1="50" y1="4"  x2="96" y2="91" stroke="url(#lgR)" stroke-width="7" stroke-linecap="butt"/>
+                  <line x1="57" y1="91" x2="96" y2="91" stroke="url(#lgR)" stroke-width="7" stroke-linecap="butt"/>
+                  <line x1="50" y1="24" x2="22" y2="80" stroke="#a855f7" stroke-width="3.5" stroke-linecap="butt" opacity="0.9"/>
+                  <line x1="50" y1="24" x2="78" y2="80" stroke="#22d3ee" stroke-width="3.5" stroke-linecap="butt" opacity="0.9"/>
+                  <line x1="34" y1="64" x2="66" y2="64" stroke="url(#lgR)" stroke-width="3.5" stroke-linecap="butt"/>
+                </svg>
+              </div>
+              <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:8px;color:#ffffff;text-transform:uppercase;">AETHON</p>
+              <p style="margin:4px 0 0;font-size:10px;letter-spacing:4px;color:#06b6d4;text-transform:uppercase;">COMMUNITY // COMPETE // CONQUER</p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px;">
+              <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(139,92,246,0.4),transparent);font-size:0;">&nbsp;</div>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px 32px 12px;">
+              <p style="margin:0 0 6px;font-size:11px;letter-spacing:3px;color:#7c3aed;text-transform:uppercase;font-weight:700;">// SIGN-IN REQUEST</p>
+              <p style="margin:0 0 24px;font-size:20px;font-weight:700;color:#f9fafb;letter-spacing:1px;">One tap to get in</p>
+              <p style="margin:0 0 28px;font-size:14px;color:#6b7280;line-height:1.7;">
+                Tap the button below to sign in to Aethon. The link expires shortly and can only be used once.
+              </p>
+
+              <!-- CTA button -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:22px;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display:inline-block;width:100%;box-sizing:border-box;padding:16px 24px;background:linear-gradient(135deg,#6d28d9,#0891b2);border-radius:10px;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;text-transform:uppercase;text-decoration:none;text-align:center;">
+                      Sign In to Aethon
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 6px;font-size:11px;color:#374151;text-align:center;">Button not working? Paste this link into your browser:</p>
+              <p style="margin:0 0 28px;font-size:11px;color:#475569;text-align:center;word-break:break-all;">
+                <a href="{{ .ConfirmationURL }}" style="color:#67e8f9;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+              </p>
+
+              <p style="margin:0 0 28px;font-size:12px;color:#374151;line-height:1.6;">
+                If you didn't request this, you can safely ignore this email — your account is still secure.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px;">
+              <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(139,92,246,0.2),transparent);font-size:0;">&nbsp;</div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 32px 32px;" align="center">
+              <p style="margin:0 0 4px;font-size:10px;letter-spacing:3px;color:rgba(139,92,246,0.5);text-transform:uppercase;">SYS // ONLINE &nbsp;·&nbsp; v2.108</p>
+              <p style="margin:0;font-size:11px;color:#1f2937;">
+                &copy; 2026 Aethon Protocol. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="height:3px;background:linear-gradient(90deg,#06b6d4,#8b5cf6,#7c3aed);font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

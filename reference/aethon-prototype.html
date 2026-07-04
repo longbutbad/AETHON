@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aethon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.29.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#03030a}
+.hidden{display:none!important}
+.scene{min-height:100vh;background:#03030a;display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif;position:relative;overflow:hidden}
+canvas#bgc{position:absolute;inset:0;width:100%;height:100%}
+.hud-tl{position:absolute;top:12px;left:12px;z-index:3;font-family:'Rajdhani',sans-serif;font-size:9px;color:rgba(139,92,246,0.4);letter-spacing:2px;line-height:1.8}
+.hud-tr{position:absolute;top:12px;right:12px;z-index:3;font-family:'Rajdhani',sans-serif;font-size:9px;color:rgba(6,182,212,0.4);letter-spacing:2px;line-height:1.8;text-align:right}
+.hud-bl{position:absolute;bottom:12px;left:12px;z-index:3;font-family:'Rajdhani',sans-serif;font-size:9px;color:rgba(139,92,246,0.3);letter-spacing:2px}
+.hud-br{position:absolute;bottom:12px;right:12px;z-index:3;font-family:'Rajdhani',sans-serif;font-size:9px;color:rgba(6,182,212,0.3);letter-spacing:2px}
+.corner{position:absolute;width:16px;height:16px;z-index:3}
+.corner.tl{top:8px;left:8px;border-top:1px solid rgba(139,92,246,0.5);border-left:1px solid rgba(139,92,246,0.5)}
+.corner.tr{top:8px;right:8px;border-top:1px solid rgba(6,182,212,0.5);border-right:1px solid rgba(6,182,212,0.5)}
+.corner.bl{bottom:8px;left:8px;border-bottom:1px solid rgba(139,92,246,0.5);border-left:1px solid rgba(139,92,246,0.5)}
+.corner.br{bottom:8px;right:8px;border-bottom:1px solid rgba(6,182,212,0.5);border-right:1px solid rgba(6,182,212,0.5)}
+.phone{width:100%;max-width:355px;min-height:660px;background:rgba(6,4,18,0.94);border-radius:28px;position:relative;z-index:2;overflow:hidden;display:flex;flex-direction:column;border:1px solid rgba(139,92,246,0.2)}
+.phone::before{content:'';position:absolute;inset:-1px;border-radius:28px;padding:1px;background:linear-gradient(145deg,rgba(168,85,247,0.8),rgba(6,182,212,0.4),rgba(139,92,246,0.1),rgba(6,182,212,0.6));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:destination-out;mask-composite:exclude;pointer-events:none;z-index:10}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 6px}
+.back-btn{width:30px;height:30px;border-radius:8px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#a78bfa}
+.top-logo{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:4px;color:#fff;text-shadow:0 0 12px rgba(139,92,246,0.8),0 0 24px rgba(6,182,212,0.4)}
+.top-tag{font-family:'Rajdhani',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(6,182,212,0.6)}
+.steps{display:flex;gap:4px;padding:8px 18px}
+.step{flex:1;height:2px;background:rgba(139,92,246,0.15);border-radius:1px;transition:all 0.3s;overflow:hidden}
+.step.active{background:linear-gradient(90deg,#8b5cf6,#06b6d4);box-shadow:0 0 8px rgba(139,92,246,0.6)}
+.step.done{background:rgba(6,182,212,0.5)}
+.screen{flex:1;padding:4px 20px 20px;display:flex;flex-direction:column}
+.logo-hero{display:flex;flex-direction:column;align-items:center;margin:4px 0 14px}
+.logo-img{width:72px;height:72px;border-radius:16px;background:rgba(6,4,18,0.9);border:1px solid rgba(139,92,246,0.25);box-shadow:0 0 24px rgba(139,92,246,0.5),0 0 48px rgba(6,182,212,0.15);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.logo-img img{width:100%;height:100%;object-fit:cover}
+.logo-wordmark{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:5px;color:#fff;margin-top:6px;text-shadow:0 0 16px rgba(139,92,246,0.7)}
+.tagline{font-family:'Rajdhani',sans-serif;font-size:9px;letter-spacing:3px;color:rgba(6,182,212,0.6);margin-top:2px}
+.stitle{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#f9fafb;letter-spacing:2px;margin-bottom:2px}
+.ssub{font-size:11px;color:#4b5563;margin-bottom:12px;letter-spacing:0.3px}
+.flabel{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:600;color:#7c3aed;letter-spacing:2.5px;text-transform:uppercase;display:block;margin-bottom:4px}
+.fgroup{margin-bottom:11px}
+.fwrap{position:relative}
+.fwrap .fi{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:#5b21b6;pointer-events:none}
+.fwrap .eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:14px;color:#374151;cursor:pointer}
+.finput{width:100%;background:#08061a;border:1px solid rgba(139,92,246,0.18);border-radius:10px;padding:11px 13px 11px 36px;font-size:13px;color:#e5e7eb;outline:none;transition:all 0.2s;font-family:'Inter',sans-serif}
+.finput:focus{border-color:#8b5cf6;box-shadow:0 0 0 2px rgba(139,92,246,0.12),0 0 12px rgba(139,92,246,0.08)}
+.finput::placeholder{color:#1f1d35}
+.row2{display:flex;gap:8px}
+.row2 .fgroup{flex:1}
+.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,#6d28d9,#0891b2);border:none;border-radius:10px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:3px;text-transform:uppercase;box-shadow:0 0 20px rgba(139,92,246,0.3);transition:all 0.2s;margin-top:4px;position:relative;overflow:hidden;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)}
+.btn-primary::after{content:'';position:absolute;top:-50%;left:-60%;width:25%;height:200%;background:rgba(255,255,255,0.08);transform:skewX(-20deg);transition:left 0.5s}
+.btn-primary:hover::after{left:130%}
+.btn-primary:hover{box-shadow:0 0 32px rgba(139,92,246,0.55),0 0 60px rgba(6,182,212,0.15)}
+.btn-primary:disabled{opacity:0.55;cursor:not-allowed}
+.fl{text-align:center;font-size:11px;color:#374151;margin-top:12px}
+.fl span{color:#8b5cf6;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;letter-spacing:1px}
+.pill{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:4px;padding:3px 10px;font-family:'Rajdhani',sans-serif;font-size:10px;color:#86efac;letter-spacing:2px;margin-bottom:12px}
+.dot-g{width:5px;height:5px;border-radius:50%;background:#22c55e;box-shadow:0 0 5px #22c55e;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.avatar-ring{width:80px;height:80px;border-radius:50%;padding:2px;cursor:pointer;position:relative;margin:6px auto 0}
+.avatar-ring-inner{width:100%;height:100%;border-radius:50%;background:#08061a;border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.av-edit{position:absolute;bottom:1px;right:1px;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#06b6d4);display:flex;align-items:center;justify-content:center;border:2px solid #03030a}
+.av-edit i{font-size:11px;color:#fff}
+.av-lbl{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;color:#8b5cf6;letter-spacing:2px;text-align:center;margin-top:6px;margin-bottom:12px;cursor:pointer}
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.game-card{background:#08061a;border:1px solid rgba(139,92,246,0.15);border-radius:10px;padding:12px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%)}
+.game-card.sel{background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.45);box-shadow:0 0 10px rgba(139,92,246,0.15)}
+.game-card span{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:#d1d5db;letter-spacing:0.5px}
+.success-ring{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#0891b2);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(139,92,246,0.5),0 0 60px rgba(6,182,212,0.2);margin:0 auto 14px}
+.otp-shield{width:64px;height:64px;border-radius:50%;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.22);display:flex;align-items:center;justify-content:center;margin:10px auto 16px;box-shadow:0 0 20px rgba(139,92,246,0.15)}
+.otp-email-tag{background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.12);border-radius:8px;padding:9px 14px;font-size:12px;color:#6b7280;text-align:center;margin-bottom:18px;font-family:'Rajdhani',sans-serif;letter-spacing:1px}
+.otp-email-tag span{color:#a78bfa;font-weight:600}
+.otp-row{display:flex;gap:7px;justify-content:center;margin:0 0 10px}
+.otp-box{width:44px;height:54px;background:#08061a;border:1px solid rgba(139,92,246,0.22);border-radius:10px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:#e5e7eb;outline:none;transition:all 0.2s;caret-color:transparent}
+.otp-box:focus{border-color:#8b5cf6;box-shadow:0 0 0 2px rgba(139,92,246,0.15),0 0 14px rgba(139,92,246,0.1)}
+.otp-box.filled{border-color:rgba(6,182,212,0.4);color:#67e8f9;background:rgba(6,182,212,0.03)}
+.wait-spinner{width:34px;height:34px;border-radius:50%;border:3px solid rgba(139,92,246,0.15);border-top-color:#8b5cf6;margin:4px auto 18px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.resend-row{text-align:center;font-family:'Rajdhani',sans-serif;font-size:11px;color:#374151;letter-spacing:1px;margin-bottom:10px}
+.rlink{color:#8b5cf6;cursor:pointer;font-weight:600}
+.err-msg{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:11px;color:#f87171;text-align:center;margin-bottom:8px;display:none;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px}
+.err-msg.show{display:block}
+.ok-msg{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:8px 12px;font-size:11px;color:#86efac;text-align:center;margin-bottom:8px;display:none;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px}
+.ok-msg.show{display:block}
+.app-body{flex:1;padding:8px 20px 24px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.av{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#0891b2);display:flex;align-items:center;justify-content:center;margin:16px 0 12px;box-shadow:0 0 24px rgba(139,92,246,0.4);overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.uname{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#f9fafb;letter-spacing:1px}
+.uhandle{font-size:12px;color:#4b5563;margin-top:2px}
+.test-banner{margin:0 18px 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:6px 10px;font-family:'Rajdhani',sans-serif;font-size:10px;letter-spacing:1px;color:#fbbf24;text-align:center;display:none}
+.test-banner.show{display:block}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:14px}
+.card{background:#08061a;border:1px solid rgba(139,92,246,0.18);border-radius:12px;padding:16px 10px}
+.card .n{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#fff}
+.card .l{font-size:9px;letter-spacing:2px;color:#6b7280;margin-top:2px;text-transform:uppercase}
+.note{margin-top:24px;font-size:12px;color:#374151;line-height:1.7;max-width:240px}
+.view{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.search-wrap{padding:0 18px 10px;position:relative}
+.search-wrap .si{position:absolute;left:30px;top:50%;transform:translateY(-50%);font-size:14px;color:#5b21b6;pointer-events:none}
+.search-input{width:100%;background:#08061a;border:1px solid rgba(139,92,246,0.18);border-radius:10px;padding:10px 13px 10px 36px;font-size:13px;color:#e5e7eb;outline:none;font-family:'Inter',sans-serif}
+.search-input:focus{border-color:#8b5cf6}
+.search-results{padding:0 12px;max-height:220px;overflow-y:auto}
+.result-row,.conv-row{display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:10px;cursor:pointer;transition:background 0.15s}
+.result-row:hover,.conv-row:hover{background:rgba(139,92,246,0.08)}
+.row-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#0891b2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.row-av img{width:100%;height:100%;object-fit:cover}
+.row-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:#e5e7eb}
+.row-handle{font-size:11px;color:#4b5563}
+.list-label{font-family:'Rajdhani',sans-serif;font-size:10px;letter-spacing:2.5px;color:#7c3aed;text-transform:uppercase;padding:6px 18px 4px}
+.conv-list{flex:1;overflow-y:auto;padding:0 12px 16px}
+.empty-note{text-align:center;font-size:12px;color:#374151;padding:30px 20px;line-height:1.7}
+.chat-head{display:flex;align-items:center;gap:10px;padding:0 18px 12px;border-bottom:1px solid rgba(139,92,246,0.12)}
+.chat-name{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#f9fafb}
+.chat-handle{font-size:11px;color:#4b5563}
+.msg-scroll{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:8px}
+.bubble{max-width:75%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.5;word-wrap:break-word}
+.bubble.mine{align-self:flex-end;background:linear-gradient(135deg,#6d28d9,#0891b2);color:#fff;border-bottom-right-radius:4px}
+.bubble.theirs{align-self:flex-start;background:#13102a;color:#e5e7eb;border:1px solid rgba(139,92,246,0.15);border-bottom-left-radius:4px}
+.input-row{position:relative;display:flex;align-items:center;gap:8px;padding:12px 14px;border-top:1px solid rgba(139,92,246,0.12)}
+.emoji-toggle{width:36px;height:36px;border-radius:50%;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;flex-shrink:0}
+.msg-input{flex:1;background:#08061a;border:1px solid rgba(139,92,246,0.18);border-radius:18px;padding:10px 14px;font-size:13px;color:#e5e7eb;outline:none;font-family:'Inter',sans-serif}
+.msg-input:focus{border-color:#8b5cf6}
+.send-btn{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#0891b2);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;flex-shrink:0}
+.emoji-panel{position:absolute;bottom:60px;left:14px;right:14px;background:#0c0a1f;border:1px solid rgba(139,92,246,0.25);border-radius:14px;padding:10px;display:none;grid-template-columns:repeat(8,1fr);gap:4px;max-height:160px;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
+.emoji-panel.show{display:grid}
+.emoji-btn{background:none;border:none;font-size:19px;padding:5px;border-radius:6px;cursor:pointer;line-height:1}
+.emoji-btn:hover{background:rgba(139,92,246,0.15)}
+</style>
+</head>
+<body>
+<div class="scene">
+  <canvas id="bgc"></canvas>
+  <div class="corner tl"></div><div class="corner tr"></div>
+  <div class="corner bl"></div><div class="corner br"></div>
+  <div class="hud-tl">AETHON<br>COMMUNITY<br>COMPETE<br>CONQUER</div>
+  <div class="hud-tr">// AETHON PROTOCOL<br>01<br>///</div>
+  <div class="hud-bl">SYS // ONLINE</div>
+  <div class="hud-br">v2.108</div>
+
+  <!-- ════════════════ PAGE: LOGIN ════════════════ -->
+  <div class="phone" id="page-login">
+    <div class="topbar">
+      <div class="back-btn" onclick="showPage('signup')"><i class="ti ti-arrow-left" style="font-size:14px"></i></div>
+      <div class="top-logo">AETHON</div>
+      <div class="top-tag">PROTOCOL 01</div>
+    </div>
+    <div class="steps">
+      <div class="step" id="li-st0"></div>
+      <div class="step" id="li-st1"></div>
+    </div>
+
+    <div class="screen" id="li-s0">
+      <div class="logo-hero">
+        <div class="logo-img">
+          <svg viewBox="0 0 100 94" xmlns="http://www.w3.org/2000/svg" width="68" height="64">
+            <defs>
+              <linearGradient id="lgL1" x1="0%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#d946ef"/><stop offset="100%" stop-color="#a855f7"/></linearGradient>
+              <linearGradient id="lgR1" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0284c7"/></linearGradient>
+              <filter id="fg1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              <filter id="fi1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <g filter="url(#fg1)" opacity="0.75">
+              <line x1="50" y1="4"  x2="4"  y2="91" stroke="#d946ef" stroke-width="10" stroke-linecap="butt"/>
+              <line x1="4"  y1="91" x2="43" y2="91" stroke="#a855f7" stroke-width="10" stroke-linecap="butt"/>
+              <line x1="50" y1="4"  x2="96" y2="91" stroke="#06b6d4" stroke-width="10" stroke-linecap="butt"/>
+              <line x1="57" y1="91" x2="96" y2="91" stroke="#0891b2" stroke-width="10" stroke-linecap="butt"/>
+            </g>
+            <line x1="50" y1="4"  x2="4"  y2="91" stroke="url(#lgL1)" stroke-width="7" stroke-linecap="butt"/>
+            <line x1="4"  y1="91" x2="43" y2="91" stroke="url(#lgL1)" stroke-width="7" stroke-linecap="butt"/>
+            <line x1="50" y1="4"  x2="96" y2="91" stroke="url(#lgR1)" stroke-width="7" stroke-linecap="butt"/>
+            <line x1="57" y1="91" x2="96" y2="91" stroke="url(#lgR1)" stroke-width="7" stroke-linecap="butt"/>
+            <g filter="url(#fi1)" opacity="0.65">
+              <line x1="50" y1="24" x2="22" y2="80" stroke="#a855f7" stroke-width="6" stroke-linecap="butt"/>
+              <line x1="50" y1="24" x2="78" y2="80" stroke="#06b6d4" stroke-width="6" stroke-linecap="butt"/>
+              <line x1="34" y1="64" x2="66" y2="64" stroke="#22d3ee" stroke-width="5" stroke-linecap="butt"/>
+            </g>
+            <line x1="50" y1="24" x2="22" y2="80" stroke="rgba(192,100,247,0.95)" stroke-width="3.5" stroke-linecap="butt"/>
+            <line x1="50" y1="24" x2="78" y2="80" stroke="rgba(34,211,238,0.95)" stroke-width="3.5" stroke-linecap="butt"/>
+            <line x1="34" y1="64" x2="66" y2="64" stroke="url(#lgR1)" stroke-width="3.5" stroke-linecap="butt"/>
+          </svg>
+        </div>
+        <div class="logo-wordmark">AETHON</div>
+        <div class="tagline">COMMUNITY // COMPETE // CONQUER</div>
+      </div>
+      <div class="pill"><div class="dot-g"></div>47,291 ONLINE</div>
+      <div class="stitle">SIGN IN</div>
+      <div class="ssub">Enter your email — we'll send you a sign-in link</div>
+      <div class="err-msg" id="li-s0err"></div>
+      <div class="fgroup">
+        <label class="flabel">Email address</label>
+        <div class="fwrap"><i class="ti ti-mail fi"></i>
+          <input class="finput" id="li-emailInput" type="email" placeholder="you@aethon.gg" onkeydown="if(event.key==='Enter')liSendMagicLink()">
+        </div>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn-primary" id="li-sendBtn" onclick="liSendMagicLink()">SEND SIGN-IN LINK</button>
+      <div class="fl">No account? <span onclick="showPage('signup')">CREATE ONE</span></div>
+      <div class="fl" style="margin-top:6px;opacity:0.6">— DEV — <span onclick="showPage('app')">SKIP SIGN-IN (TEST MODE)</span></div>
+    </div>
+
+    <div class="screen hidden" id="li-s1">
+      <div class="otp-shield"><i class="ti ti-mail-opened" style="font-size:28px;color:#a78bfa"></i></div>
+      <div class="stitle" style="text-align:center">CHECK YOUR EMAIL</div>
+      <div class="ssub" style="text-align:center;margin-bottom:10px">We sent a sign-in link to</div>
+      <div class="otp-email-tag" id="li-otpEmailTag">your email address</div>
+      <div class="err-msg" id="li-otpErr"></div>
+      <div class="ok-msg" id="li-otpOk"></div>
+      <div class="wait-spinner"></div>
+      <p style="text-align:center;font-size:12px;color:#4b5563;line-height:1.7;margin-bottom:14px">
+        Open the email and tap <strong style="color:#a78bfa">Sign In to Aethon</strong>. This page continues automatically once you're verified.
+      </p>
+      <div class="resend-row">
+        <span id="li-resendTimerTxt">Resend link in <span id="li-resendCount">60</span>s</span>
+        <span class="rlink" id="li-resendLink" style="display:none" onclick="liResendLink()">RESEND LINK</span>
+      </div>
+      <div style="flex:1"></div>
+      <div class="fl" style="margin-top:10px">Wrong email? <span onclick="liGt(0)">GO BACK</span></div>
+    </div>
+
+    <div class="screen hidden" id="li-s2">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px">
+        <div class="success-ring"><i class="ti ti-check" style="font-size:34px;color:#fff"></i></div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:#f9fafb;letter-spacing:3px">AUTHENTICATED</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:rgba(6,182,212,0.7);letter-spacing:3px">// AETHON PROTOCOL ACTIVE</div>
+        <div style="font-size:12px;color:#4b5563;max-width:220px;line-height:1.7;margin-top:4px">Identity confirmed. Welcome back, operator.</div>
+        <div class="pill" style="margin-top:8px"><div class="dot-g"></div>SESSION ACTIVE</div>
+      </div>
+      <button class="btn-primary" onclick="showPage('app')">ENTER AETHON</button>
+    </div>
+  </div>
+
+  <!-- ════════════════ PAGE: SIGNUP ════════════════ -->
+  <div class="phone hidden" id="page-signup" style="min-height:680px">
+    <div class="topbar">
+      <div class="back-btn" onclick="suGoBack()"><i class="ti ti-arrow-left" style="font-size:14px"></i></div>
+      <div class="top-logo">AETHON</div>
+      <div class="top-tag">PROTOCOL 01</div>
+    </div>
+    <div class="steps">
+      <div class="step" id="su-st0"></div>
+      <div class="step" id="su-st1"></div>
+      <div class="step" id="su-st2"></div>
+      <div class="step" id="su-st3"></div>
+    </div>
+
+    <div class="screen" id="su-s0">
+      <div class="logo-hero">
+        <div class="logo-img">
+          <svg viewBox="0 0 100 94" xmlns="http://www.w3.org/2000/svg" width="68" height="64">
+            <defs>
+              <linearGradient id="lgL2" x1="0%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#d946ef"/><stop offset="100%" stop-color="#a855f7"/></linearGradient>
+              <linearGradient id="lgR2" x1="50%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0284c7"/></linearGradient>
+              <filter id="fg2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              <filter id="fi2" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <g filter="url(#fg2)" opacity="0.75">
+              <line x1="50" y1="4"  x2="4"  y2="91" stroke="#d946ef" stroke-width="10" stroke-linecap="butt"/>
+              <line x1="4"  y1="91" x2="43" y2="91" stroke="#a855f7" stroke-width="10" stroke-linecap="butt"/>
+              <line x1="50" y1="4"  x2="96" y2="91" stroke="#06b6d4" stroke-width="10" stroke-linecap="butt"/>
+              <line x1="57" y1="91" x2="96" y2="91" stroke="#0891b2" stroke-width="10" stroke-linecap="butt"/>
+            </g>
+            <line x1="50" y1="4"  x2="4"  y2="91" stroke="url(#lgL2)" stroke-width="7" stroke-linecap="butt"/>
+            <line x1="4"  y1="91" x2="43" y2="91" stroke="url(#lgL2)" stroke-width="7" stroke-linecap="butt"/>
+            <line x1="50" y1="4"  x2="96" y2="91" stroke="url(#lgR2)" stroke-width="7" stroke-linecap="butt"/>
+            <line x1="57" y1="91" x2="96" y2="91" stroke="url(#lgR2)" stroke-width="7" stroke-linecap="butt"/>
+            <g filter="url(#fi2)" opacity="0.65">
+              <line x1="50" y1="24" x2="22" y2="80" stroke="#a855f7" stroke-width="6" stroke-linecap="butt"/>
+              <line x1="50" y1="24" x2="78" y2="80" stroke="#06b6d4" stroke-width="6" stroke-linecap="butt"/>
+              <line x1="34" y1="64" x2="66" y2="64" stroke="#22d3ee" stroke-width="5" stroke-linecap="butt"/>
+            </g>
+            <line x1="50" y1="24" x2="22" y2="80" stroke="rgba(192,100,247,0.95)" stroke-width="3.5" stroke-linecap="butt"/>
+            <line x1="50" y1="24" x2="78" y2="80" stroke="rgba(34,211,238,0.95)" stroke-width="3.5" stroke-linecap="butt"/>
+            <line x1="34" y1="64" x2="66" y2="64" stroke="url(#lgR2)" stroke-width="3.5" stroke-linecap="butt"/>
+          </svg>
+        </div>
+        <div class="logo-wordmark">AETHON</div>
+        <div class="tagline">COMMUNITY // COMPETE // CONQUER</div>
+      </div>
+      <div class="pill"><div class="dot-g"></div>47,291 ONLINE</div>
+      <div class="stitle">CREATE ACCOUNT</div>
+      <div class="ssub">Join the gaming community</div>
+      <div class="err-msg" id="su-s0err"></div>
+      <div class="fgroup">
+        <label class="flabel">Email address</label>
+        <div class="fwrap"><i class="ti ti-mail fi"></i>
+          <input class="finput" id="su-emailInput" type="email" placeholder="you@aethon.gg">
+        </div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">Password</label>
+        <div class="fwrap"><i class="ti ti-lock fi"></i>
+          <input class="finput" type="password" id="su-p0" placeholder="Min 8 characters">
+          <i class="ti ti-eye eye" onclick="tp('su-p0')"></i>
+        </div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">Confirm password</label>
+        <div class="fwrap"><i class="ti ti-lock fi"></i>
+          <input class="finput" type="password" id="su-p1" placeholder="Repeat password">
+          <i class="ti ti-eye eye" onclick="tp('su-p1')"></i>
+        </div>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn-primary" id="su-initBtn" onclick="suInitAccount()">INITIALIZE ACCOUNT</button>
+      <div class="fl">Already in? <span onclick="showPage('login')">SIGN IN</span></div>
+    </div>
+
+    <div class="screen hidden" id="su-s1">
+      <div class="otp-shield"><i class="ti ti-shield-lock" style="font-size:28px;color:#a78bfa"></i></div>
+      <div class="stitle" style="text-align:center">VERIFY EMAIL</div>
+      <div class="ssub" style="text-align:center;margin-bottom:10px">Enter the 6-digit code sent to</div>
+      <div class="otp-email-tag" id="su-otpEmailTag">your email address</div>
+      <div class="err-msg" id="su-otpErr"></div>
+      <div class="ok-msg" id="su-otpOk"></div>
+      <div class="otp-row">
+        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="su-otp0">
+        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="su-otp1">
+        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="su-otp2">
+        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="su-otp3">
+        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="su-otp4">
+        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="su-otp5">
+      </div>
+      <div class="resend-row">
+        <span id="su-resendTimerTxt">Resend code in <span id="su-resendCount">60</span>s</span>
+        <span class="rlink" id="su-resendLink" style="display:none" onclick="suResendCode()">RESEND CODE</span>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn-primary" id="su-verifyBtn" onclick="suVerifyOtp()">VERIFY CODE</button>
+      <div class="fl" style="margin-top:10px">Already in? <span onclick="showPage('login')">SIGN IN</span></div>
+    </div>
+
+    <div class="screen hidden" id="su-s2">
+      <div class="stitle">YOUR IDENTITY</div>
+      <div class="ssub">How will the community know you?</div>
+      <div class="err-msg" id="su-s2err"></div>
+      <div class="avatar-ring" onclick="document.getElementById('su-avf').click()">
+        <div class="avatar-ring-inner" id="su-avInner"><i class="ti ti-user" style="font-size:30px;color:#2d2b4e"></i></div>
+        <div class="av-edit"><i class="ti ti-camera"></i></div>
+      </div>
+      <input type="file" id="su-avf" accept="image/*" style="display:none" onchange="suPrevAv(event)">
+      <div class="av-lbl" onclick="document.getElementById('su-avf').click()">UPLOAD AVATAR</div>
+      <div class="row2">
+        <div class="fgroup"><label class="flabel">First</label><div class="fwrap"><i class="ti ti-user fi"></i><input class="finput" id="su-firstInput" type="text" placeholder="Gleb"></div></div>
+        <div class="fgroup"><label class="flabel">Last</label><div class="fwrap"><i class="ti ti-user fi"></i><input class="finput" id="su-lastInput" type="text" placeholder="Smith"></div></div>
+      </div>
+      <div class="fgroup"><label class="flabel">Username</label><div class="fwrap"><i class="ti ti-at fi"></i><input class="finput" id="su-usernameInput" type="text" placeholder="coolsetup_guy"></div></div>
+      <div class="fgroup"><label class="flabel">Date of birth</label><div class="fwrap"><i class="ti ti-calendar fi"></i><input class="finput" id="su-dobInput" type="text" placeholder="DD / MM / YYYY"></div></div>
+      <div style="flex:1"></div>
+      <button class="btn-primary" id="su-identityBtn" onclick="suSaveIdentity()">NEXT: SELECT GAMES</button>
+      <div class="fl" style="margin-top:10px">Already in? <span onclick="showPage('login')">SIGN IN</span></div>
+    </div>
+
+    <div class="screen hidden" id="su-s3">
+      <div class="stitle">YOUR ARSENAL</div>
+      <div class="ssub">Pick your games — we'll find your crew</div>
+      <div class="game-grid" id="su-gg"></div>
+      <div style="flex:1"></div>
+      <button class="btn-primary" onclick="suGt(4)">DEPLOY INTO AETHON</button>
+      <div class="fl" style="margin-top:10px">Already in? <span onclick="showPage('login')">SIGN IN</span></div>
+    </div>
+
+    <div class="screen hidden" id="su-s4">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px">
+        <div class="success-ring"><i class="ti ti-check" style="font-size:34px;color:#fff"></i></div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:#f9fafb;letter-spacing:3px">DEPLOYED</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:11px;color:rgba(6,182,212,0.7);letter-spacing:3px">// AETHON PROTOCOL ACTIVE</div>
+        <div style="font-size:12px;color:#4b5563;max-width:220px;line-height:1.7;margin-top:4px">Welcome to Aethon. Your setup deserves an audience.</div>
+        <div class="pill" style="margin-top:8px"><div class="dot-g"></div>ACCOUNT ONLINE</div>
+      </div>
+      <button class="btn-primary" onclick="showPage('app')">ENTER AETHON</button>
+    </div>
+  </div>
+
+  <!-- ════════════════ PAGE: APP (DASHBOARD) ════════════════ -->
+  <div class="phone hidden" id="page-app">
+    <div class="topbar">
+      <div class="back-btn" onclick="showPage('settings')"><i class="ti ti-settings" style="font-size:14px"></i></div>
+      <div class="top-logo">AETHON</div>
+      <div class="back-btn" onclick="appSignOut()"><i class="ti ti-logout" style="font-size:14px"></i></div>
+    </div>
+    <div class="test-banner" id="app-testBanner">⚠ TEST MODE — no real session, sign-out is a no-op</div>
+    <div class="app-body">
+      <div class="av" id="app-avBox"><i class="ti ti-user" style="font-size:34px;color:#fff"></i></div>
+      <div class="uname" id="app-uName">Operator</div>
+      <div class="uhandle" id="app-uHandle">@guest</div>
+      <div class="pill"><div class="dot-g"></div>SESSION ACTIVE</div>
+      <div class="cards">
+        <div class="card"><div class="n">0</div><div class="l">Friends</div></div>
+        <div class="card"><div class="n">0</div><div class="l">Matches</div></div>
+        <div class="card"><div class="n">0</div><div class="l">Games</div></div>
+        <div class="card"><div class="n">#—</div><div class="l">Rank</div></div>
+      </div>
+      <button class="btn-primary" style="margin-top:16px" onclick="showPage('messages')">
+        <i class="ti ti-message-circle" style="margin-right:6px"></i>MESSAGES
+      </button>
+      <p class="note">Friends list, match history and game stats aren't built yet. Good enough to confirm the auth flow lands somewhere real.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════ PAGE: ACCOUNT SETTINGS ════════════════ -->
+  <div class="phone hidden" id="page-settings">
+    <div class="topbar">
+      <div class="back-btn" onclick="showPage('app')"><i class="ti ti-arrow-left" style="font-size:14px"></i></div>
+      <div class="top-logo">AETHON</div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="screen">
+      <div class="stitle">ACCOUNT SETTINGS</div>
+      <div class="ssub">Update how the community sees you</div>
+      <div class="test-banner" id="settings-testBanner">⚠ TEST MODE — no real session, nothing here will save</div>
+      <div class="err-msg" id="settings-err"></div>
+      <div class="ok-msg" id="settings-ok"></div>
+
+      <div class="avatar-ring" onclick="document.getElementById('settings-avf').click()">
+        <div class="avatar-ring-inner" id="settings-avInner"><i class="ti ti-user" style="font-size:30px;color:#2d2b4e"></i></div>
+        <div class="av-edit"><i class="ti ti-camera"></i></div>
+      </div>
+      <input type="file" id="settings-avf" accept="image/*" style="display:none" onchange="settingsPrevAv(event)">
+      <div class="av-lbl" onclick="document.getElementById('settings-avf').click()">CHANGE AVATAR</div>
+
+      <div class="fgroup">
+        <label class="flabel">Email</label>
+        <div class="fwrap"><i class="ti ti-mail fi"></i>
+          <input class="finput" id="settings-emailDisplay" type="text" disabled style="opacity:0.5;cursor:not-allowed">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="fgroup"><label class="flabel">First</label><div class="fwrap"><i class="ti ti-user fi"></i><input class="finput" id="settings-firstInput" type="text" placeholder="Gleb"></div></div>
+        <div class="fgroup"><label class="flabel">Last</label><div class="fwrap"><i class="ti ti-user fi"></i><input class="finput" id="settings-lastInput" type="text" placeholder="Smith"></div></div>
+      </div>
+      <div class="fgroup"><label class="flabel">Username</label><div class="fwrap"><i class="ti ti-at fi"></i><input class="finput" id="settings-usernameInput" type="text" placeholder="coolsetup_guy"></div></div>
+      <div class="fgroup"><label class="flabel">Date of birth</label><div class="fwrap"><i class="ti ti-calendar fi"></i><input class="finput" id="settings-dobInput" type="text" placeholder="DD / MM / YYYY"></div></div>
+      <div style="flex:1"></div>
+      <button class="btn-primary" id="settings-saveBtn" onclick="settingsSave()">SAVE CHANGES</button>
+    </div>
+  </div>
+
+  <!-- ════════════════ PAGE: MESSAGES ════════════════ -->
+  <div class="phone hidden" id="page-messages">
+    <div class="topbar">
+      <div class="back-btn" onclick="msgGoBack()"><i class="ti ti-arrow-left" style="font-size:14px"></i></div>
+      <div class="top-logo" id="msg-headerTitle">MESSAGES</div>
+      <div style="width:30px"></div>
+    </div>
+
+    <div class="view" id="msg-viewList">
+      <div class="search-wrap">
+        <i class="ti ti-search si"></i>
+        <input class="search-input" id="msg-searchInput" placeholder="Find someone by username..." oninput="msgSearchUsers()">
+      </div>
+      <div class="search-results" id="msg-searchResults"></div>
+      <div class="list-label">CONVERSATIONS</div>
+      <div class="conv-list" id="msg-convList">
+        <div class="empty-note">No conversations yet — search a username above to start one.</div>
+      </div>
+    </div>
+
+    <div class="view hidden" id="msg-viewChat">
+      <div class="chat-head">
+        <div class="row-av" id="msg-chatAv"><i class="ti ti-user" style="font-size:18px;color:#fff"></i></div>
+        <div>
+          <div class="chat-name" id="msg-chatName">Operator</div>
+          <div class="chat-handle" id="msg-chatHandle">@user</div>
+        </div>
+      </div>
+      <div class="msg-scroll" id="msg-scroll"></div>
+      <div class="input-row">
+        <div class="emoji-panel" id="msg-emojiPanel"></div>
+        <div class="emoji-toggle" onclick="msgToggleEmojiPanel()">😀</div>
+        <input class="msg-input" id="msg-textInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')msgSendMessage()">
+        <button class="send-btn" onclick="msgSendMessage()"><i class="ti ti-send" style="font-size:15px"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Supabase (shared by every page) ───────────────────────────────────────────
+const SUPABASE_URL      = 'https://pyubnurdhndaunjhfiuz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5dWJudXJkaG5kYXVuamhmaXV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MDU0OTksImV4cCI6MjA5NzE4MTQ5OX0.puJOn0y2CQkHzuR4Div3g2tEAjgKWNi2ttgfHpGiHxw';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const REDIRECT_URL = window.location.origin + window.location.pathname;
+
+let currentUserId = null;
+async function refreshAuthState() {
+  const { data } = await sb.auth.getUser();
+  currentUserId = data?.user?.id || null;
+  return data?.user || null;
+}
+
+// ── Top-level page switching ──────────────────────────────────────────────────
+function showPage(name) {
+  ['login','signup','app','messages','settings'].forEach(p => {
+    document.getElementById('page-' + p).classList.toggle('hidden', p !== name);
+  });
+  if (name === 'signup')   suGt(0);
+  if (name === 'login')    liGt(0);
+  if (name === 'app')      appLoadUser();
+  if (name === 'messages') msgInit();
+  if (name === 'settings') settingsLoad();
+}
+
+// ── Shared helpers (used by both signup + login screens) ─────────────────────
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠ ' + msg;
+  el.className = 'err-msg show';
+  setTimeout(() => el.className = 'err-msg', 5000);
+}
+function showOk(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'ok-msg show';
+  setTimeout(() => el.className = 'ok-msg', 4000);
+}
+function setBusy(id, busy) {
+  const btn = document.getElementById(id);
+  if (busy) { btn.dataset.orig = btn.textContent; btn.textContent = 'PROCESSING...'; btn.disabled = true; }
+  else { btn.textContent = btn.dataset.orig || btn.textContent; btn.disabled = false; }
+}
+function tp(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
+
+let resendInterval;
+function startResendTimer(prefix) {
+  let t = 60;
+  document.getElementById(prefix + '-resendCount').textContent = t;
+  document.getElementById(prefix + '-resendTimerTxt').style.display = 'inline';
+  document.getElementById(prefix + '-resendLink').style.display = 'none';
+  clearInterval(resendInterval);
+  resendInterval = setInterval(() => {
+    t--;
+    document.getElementById(prefix + '-resendCount').textContent = t;
+    if (t <= 0) {
+      clearInterval(resendInterval);
+      document.getElementById(prefix + '-resendTimerTxt').style.display = 'none';
+      document.getElementById(prefix + '-resendLink').style.display = 'inline';
+    }
+  }, 1000);
+}
+
+// ── SIGNUP ─────────────────────────────────────────────────────────────────────
+const SU_SCREENS = ['su-s0','su-s1','su-s2','su-s3','su-s4'];
+let suCurIdx = 0;
+let suCurrentEmail = '';
+
+function suUpd() {
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById('su-st' + i);
+    const active = suCurIdx >= 4 ? 4 : suCurIdx;
+    el.className = 'step' + (i === active ? ' active' : i < active ? ' done' : '');
+  }
+}
+function suGt(n) {
+  document.getElementById(SU_SCREENS[suCurIdx]).classList.add('hidden');
+  suCurIdx = Math.min(n, SU_SCREENS.length - 1);
+  document.getElementById(SU_SCREENS[suCurIdx]).classList.remove('hidden');
+  suUpd();
+}
+function suGoBack() { if (suCurIdx > 0) suGt(suCurIdx - 1); }
+
+let suAvatarFile = null;
+function suPrevAv(e) {
+  const f = e.target.files[0]; if (!f) return;
+  suAvatarFile = f;
+  const r = new FileReader();
+  r.onload = ev => { document.getElementById('su-avInner').innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; };
+  r.readAsDataURL(f);
+}
+
+function suParseDob(str) {
+  const m = str.trim().match(/^(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{4})$/);
+  if (!m) return null;
+  const d = parseInt(m[1], 10), mo = parseInt(m[2], 10), y = parseInt(m[3], 10);
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+async function suSaveIdentity() {
+  const first    = document.getElementById('su-firstInput').value.trim();
+  const last     = document.getElementById('su-lastInput').value.trim();
+  const username = document.getElementById('su-usernameInput').value.trim();
+  const dobRaw   = document.getElementById('su-dobInput').value.trim();
+
+  if (!first || !username) return showErr('su-s2err', 'First name and username are required');
+  const dob = dobRaw ? suParseDob(dobRaw) : null;
+  if (dobRaw && !dob) return showErr('su-s2err', 'Date of birth must be DD / MM / YYYY');
+
+  setBusy('su-identityBtn', true);
+  const { data: userData, error: userErr } = await sb.auth.getUser();
+  if (userErr || !userData?.user) { setBusy('su-identityBtn', false); return showErr('su-s2err', 'Session expired — please sign in again'); }
+  const uid = userData.user.id;
+
+  let avatarUrl = null;
+  if (suAvatarFile) {
+    const ext  = suAvatarFile.name.split('.').pop();
+    const path = `${uid}/avatar.${ext}`;
+    const { error: upErr } = await sb.storage.from('avatars').upload(path, suAvatarFile, { upsert: true });
+    if (upErr) { setBusy('su-identityBtn', false); return showErr('su-s2err', upErr.message); }
+    avatarUrl = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+  }
+
+  const { error: dbErr } = await sb.from('profiles').upsert({
+    id: uid, first_name: first, last_name: last, username, dob,
+    avatar_url: avatarUrl, updated_at: new Date().toISOString()
+  });
+  setBusy('su-identityBtn', false);
+  if (dbErr) return showErr('su-s2err', dbErr.message);
+
+  currentUserId = uid;
+  suGt(3);
+}
+
+function suWireOtp() {
+  const boxes = Array.from(document.querySelectorAll('#su-s1 .otp-box'));
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g, '');
+      e.target.value = v.slice(-1);
+      e.target.classList.toggle('filled', !!v);
+      if (v && i < 5) boxes[i + 1].focus();
+    });
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !box.value && i > 0) {
+        boxes[i - 1].value = ''; boxes[i - 1].classList.remove('filled'); boxes[i - 1].focus();
+      }
+    });
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const txt = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+      [...txt].forEach((ch, j) => { if (boxes[j]) { boxes[j].value = ch; boxes[j].classList.add('filled'); } });
+      const next = boxes[Math.min(txt.length, 5)]; if (next) next.focus();
+    });
+  });
+}
+function suGetOtp()   { return Array.from(document.querySelectorAll('#su-s1 .otp-box')).map(b => b.value).join(''); }
+function suClearOtp() { document.querySelectorAll('#su-s1 .otp-box').forEach(b => { b.value = ''; b.classList.remove('filled'); }); }
+
+async function suInitAccount() {
+  const email = document.getElementById('su-emailInput').value.trim();
+  const pass  = document.getElementById('su-p0').value;
+  const conf  = document.getElementById('su-p1').value;
+  if (!email || !pass)  return showErr('su-s0err', 'Please fill in all fields');
+  if (pass.length < 8)  return showErr('su-s0err', 'Password must be at least 8 characters');
+  if (pass !== conf)    return showErr('su-s0err', 'Passwords do not match');
+
+  setBusy('su-initBtn', true);
+  const { error } = await sb.auth.signUp({ email, password: pass });
+  setBusy('su-initBtn', false);
+  if (error) return showErr('su-s0err', error.message);
+
+  suCurrentEmail = email;
+  document.getElementById('su-otpEmailTag').innerHTML = `Code sent to <span>${email}</span>`;
+  suClearOtp();
+  suGt(1);
+  startResendTimer('su');
+  setTimeout(() => document.getElementById('su-otp0').focus(), 300);
+}
+
+async function suVerifyOtp() {
+  const token = suGetOtp();
+  if (token.length < 6) return showErr('su-otpErr', 'Enter the full 6-digit code');
+
+  setBusy('su-verifyBtn', true);
+  const { error } = await sb.auth.verifyOtp({ email: suCurrentEmail, token, type: 'signup' });
+  setBusy('su-verifyBtn', false);
+  if (error) { suClearOtp(); document.getElementById('su-otp0').focus(); return showErr('su-otpErr', error.message); }
+
+  clearInterval(resendInterval);
+  await refreshAuthState();
+  suGt(2);
+}
+
+async function suResendCode() {
+  const { error } = await sb.auth.resend({ type: 'signup', email: suCurrentEmail });
+  if (error) return showErr('su-otpErr', error.message);
+  suClearOtp();
+  startResendTimer('su');
+  setTimeout(() => document.getElementById('su-otp0').focus(), 100);
+  showOk('su-otpOk', 'New code sent — check your inbox');
+}
+
+const suGamesList = [
+  {n:'Valorant',i:'ti-crosshair',c:'#ff4655'},{n:'CS2',i:'ti-bomb',c:'#f59e0b'},
+  {n:'Minecraft',i:'ti-box',c:'#6abf69'},{n:'Fortnite',i:'ti-bolt',c:'#00d4ff'},
+  {n:'Apex',i:'ti-flame',c:'#e05c2b'},{n:'League',i:'ti-sword',c:'#c89b3c'},
+  {n:'Roblox',i:'ti-device-gamepad',c:'#e2231a'},{n:'GTA V',i:'ti-car',c:'#fcba03'}
+];
+const suSelectedGames = new Set();
+function suBuildGames() {
+  const gg = document.getElementById('su-gg');
+  suGamesList.forEach((g, i) => {
+    const d = document.createElement('div');
+    d.className = 'game-card';
+    d.innerHTML = `<i class="ti ${g.i}" style="font-size:18px;color:${g.c}"></i><span>${g.n}</span>`;
+    d.onclick = () => { suSelectedGames.has(i) ? suSelectedGames.delete(i) : suSelectedGames.add(i); d.classList.toggle('sel'); };
+    gg.appendChild(d);
+  });
+}
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────────
+const LI_SCREENS = ['li-s0','li-s1','li-s2'];
+let liCurIdx = 0;
+let liCurrentEmail = '';
+
+function liUpd() {
+  ['li-st0','li-st1'].forEach((id, i) => {
+    document.getElementById(id).className = 'step' + (i === liCurIdx ? ' active' : i < liCurIdx ? ' done' : '');
+  });
+}
+function liGt(n) {
+  document.getElementById(LI_SCREENS[liCurIdx]).classList.add('hidden');
+  liCurIdx = Math.min(n, LI_SCREENS.length - 1);
+  document.getElementById(LI_SCREENS[liCurIdx]).classList.remove('hidden');
+  liUpd();
+}
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    currentUserId = session.user.id;
+    clearInterval(resendInterval);
+    if (!document.getElementById('page-login').classList.contains('hidden')) liGt(2);
+  }
+});
+
+async function liSendMagicLink() {
+  const email = document.getElementById('li-emailInput').value.trim();
+  if (!email) return showErr('li-s0err', 'Enter your email address');
+
+  setBusy('li-sendBtn', true);
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: REDIRECT_URL } });
+  setBusy('li-sendBtn', false);
+  if (error) return showErr('li-s0err', error.message);
+
+  liCurrentEmail = email;
+  document.getElementById('li-otpEmailTag').innerHTML = `Link sent to <span>${email}</span>`;
+  liGt(1);
+  startResendTimer('li');
+}
+async function liResendLink() {
+  const { error } = await sb.auth.signInWithOtp({ email: liCurrentEmail, options: { emailRedirectTo: REDIRECT_URL } });
+  if (error) return showErr('li-otpErr', error.message);
+  startResendTimer('li');
+  showOk('li-otpOk', 'New link sent — check your inbox');
+}
+
+// ── APP (DASHBOARD) ───────────────────────────────────────────────────────────
+async function appLoadUser() {
+  const banner = document.getElementById('app-testBanner');
+  banner.classList.remove('show');
+  document.getElementById('app-uName').textContent = 'Operator';
+  document.getElementById('app-uHandle').textContent = '@guest';
+  document.getElementById('app-avBox').innerHTML = '<i class="ti ti-user" style="font-size:34px;color:#fff"></i>';
+  if (!currentUserId) { banner.classList.add('show'); return; }
+
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUserId).single();
+  if (profile) {
+    document.getElementById('app-uName').textContent = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Operator';
+    document.getElementById('app-uHandle').textContent = '@' + (profile.username || 'guest');
+    if (profile.avatar_url) document.getElementById('app-avBox').innerHTML = `<img src="${profile.avatar_url}">`;
+  } else {
+    const { data } = await sb.auth.getUser();
+    document.getElementById('app-uHandle').textContent = data?.user?.email || '@guest';
+  }
+}
+function appSignOut() {
+  sb.auth.signOut().finally(() => { currentUserId = null; showPage('login'); });
+}
+
+// ── ACCOUNT SETTINGS ───────────────────────────────────────────────────────────
+let settingsAvatarFile = null;
+
+function formatDob(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d} / ${m} / ${y}`;
+}
+
+async function settingsLoad() {
+  document.getElementById('settings-err').className = 'err-msg';
+  document.getElementById('settings-ok').className = 'ok-msg';
+  settingsAvatarFile = null;
+  document.getElementById('settings-avInner').innerHTML = '<i class="ti ti-user" style="font-size:30px;color:#2d2b4e"></i>';
+  document.getElementById('settings-firstInput').value = '';
+  document.getElementById('settings-lastInput').value = '';
+  document.getElementById('settings-usernameInput').value = '';
+  document.getElementById('settings-dobInput').value = '';
+
+  const banner = document.getElementById('settings-testBanner');
+  if (!currentUserId) { banner.classList.add('show'); return; }
+  banner.classList.remove('show');
+
+  const { data: userData } = await sb.auth.getUser();
+  document.getElementById('settings-emailDisplay').value = userData?.user?.email || '';
+
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUserId).single();
+  if (profile) {
+    document.getElementById('settings-firstInput').value = profile.first_name || '';
+    document.getElementById('settings-lastInput').value = profile.last_name || '';
+    document.getElementById('settings-usernameInput').value = profile.username || '';
+    document.getElementById('settings-dobInput').value = formatDob(profile.dob);
+    if (profile.avatar_url) document.getElementById('settings-avInner').innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  }
+}
+
+function settingsPrevAv(e) {
+  const f = e.target.files[0]; if (!f) return;
+  settingsAvatarFile = f;
+  const r = new FileReader();
+  r.onload = ev => { document.getElementById('settings-avInner').innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; };
+  r.readAsDataURL(f);
+}
+
+async function settingsSave() {
+  if (!currentUserId) return showErr('settings-err', 'No active session — sign in to save changes');
+
+  const first    = document.getElementById('settings-firstInput').value.trim();
+  const last     = document.getElementById('settings-lastInput').value.trim();
+  const username = document.getElementById('settings-usernameInput').value.trim();
+  const dobRaw   = document.getElementById('settings-dobInput').value.trim();
+
+  if (!first || !username) return showErr('settings-err', 'First name and username are required');
+  const dob = dobRaw ? suParseDob(dobRaw) : null;
+  if (dobRaw && !dob) return showErr('settings-err', 'Date of birth must be DD / MM / YYYY');
+
+  setBusy('settings-saveBtn', true);
+
+  let avatarUrl;
+  if (settingsAvatarFile) {
+    const ext  = settingsAvatarFile.name.split('.').pop();
+    const path = `${currentUserId}/avatar.${ext}`;
+    const { error: upErr } = await sb.storage.from('avatars').upload(path, settingsAvatarFile, { upsert: true });
+    if (upErr) { setBusy('settings-saveBtn', false); return showErr('settings-err', upErr.message); }
+    avatarUrl = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+  }
+
+  const update = { id: currentUserId, first_name: first, last_name: last, username, dob, updated_at: new Date().toISOString() };
+  if (avatarUrl) update.avatar_url = avatarUrl;
+
+  const { error: dbErr } = await sb.from('profiles').upsert(update);
+  setBusy('settings-saveBtn', false);
+  if (dbErr) return showErr('settings-err', dbErr.message);
+
+  showOk('settings-ok', 'Saved');
+}
+
+// ── MESSAGES ───────────────────────────────────────────────────────────────────
+let msgCurrentConvId = null;
+let msgRealtimeChannel = null;
+
+const MSG_EMOJIS = ['😀','😂','😅','😍','😎','🤔','😢','😭','😡','🥳','👍','👎','👏','🙌','🤝','💪','🔥','💯','✨','🎮','🏆','⚡','❤️','💜','💙','💚','🧡','🖤','🤍','✅','❌','⭐','🎉','👀','😴','🤯','🥶','😱','🙏','🚀','⚔️','🎯','🕹️','😏','😘','🤩','😬','🫡'];
+
+function msgBuildEmojiGrid() {
+  document.getElementById('msg-emojiPanel').innerHTML =
+    MSG_EMOJIS.map(e => `<button class="emoji-btn" onclick="msgInsertEmoji('${e}')">${e}</button>`).join('');
+}
+function msgToggleEmojiPanel() { document.getElementById('msg-emojiPanel').classList.toggle('show'); }
+function msgInsertEmoji(e) {
+  const input = document.getElementById('msg-textInput');
+  input.value += e;
+  input.focus();
+}
+
+function msgShowView(name) {
+  document.getElementById('msg-viewList').classList.toggle('hidden', name !== 'list');
+  document.getElementById('msg-viewChat').classList.toggle('hidden', name !== 'chat');
+  document.getElementById('msg-headerTitle').textContent = name === 'chat' ? 'CHAT' : 'MESSAGES';
+}
+function msgGoBack() {
+  if (!document.getElementById('msg-viewChat').classList.contains('hidden')) {
+    if (msgRealtimeChannel) { sb.removeChannel(msgRealtimeChannel); msgRealtimeChannel = null; }
+    msgShowView('list');
+    msgLoadConversations();
+  } else {
+    showPage('app');
+  }
+}
+
+function msgInitials(p) {
+  return ((p?.first_name?.[0] || '') + (p?.last_name?.[0] || '')).toUpperCase() || '?';
+}
+function msgAvatarHtml(p) {
+  return p?.avatar_url ? `<img src="${p.avatar_url}">` : `<span style="color:#fff;font-size:13px;font-weight:700">${msgInitials(p)}</span>`;
+}
+
+let msgSearchTimer;
+function msgSearchUsers() {
+  clearTimeout(msgSearchTimer);
+  msgSearchTimer = setTimeout(async () => {
+    const q = document.getElementById('msg-searchInput').value.trim();
+    const box = document.getElementById('msg-searchResults');
+    if (!q) { box.innerHTML = ''; return; }
+    const { data } = await sb.from('profiles')
+      .select('id, first_name, last_name, username, avatar_url')
+      .ilike('username', `%${q}%`).neq('id', currentUserId).limit(8);
+    box.innerHTML = (data || []).map(p => `
+      <div class="result-row" onclick="msgStartDm('${p.id}')">
+        <div class="row-av">${msgAvatarHtml(p)}</div>
+        <div>
+          <div class="row-name">${[p.first_name, p.last_name].filter(Boolean).join(' ') || 'Operator'}</div>
+          <div class="row-handle">@${p.username}</div>
+        </div>
+      </div>`).join('') || '<div class="empty-note">No matches</div>';
+  }, 250);
+}
+
+async function msgStartDm(otherUserId) {
+  const { data, error } = await sb.rpc('get_or_create_dm', { other_user_id: otherUserId });
+  if (error) return alert(error.message);
+  document.getElementById('msg-searchInput').value = '';
+  document.getElementById('msg-searchResults').innerHTML = '';
+  msgOpenChat(data);
+}
+
+async function msgLoadConversations() {
+  const { data: myMemberships } = await sb.from('conversation_members').select('conversation_id').eq('user_id', currentUserId);
+  const convIds = (myMemberships || []).map(m => m.conversation_id);
+  const listEl = document.getElementById('msg-convList');
+  if (!convIds.length) { listEl.innerHTML = '<div class="empty-note">No conversations yet — search a username above to start one.</div>'; return; }
+
+  const { data: members } = await sb.from('conversation_members')
+    .select('conversation_id, user_id').in('conversation_id', convIds).neq('user_id', currentUserId);
+  const otherIds = [...new Set((members || []).map(m => m.user_id))];
+  const { data: profiles } = await sb.from('profiles')
+    .select('id, first_name, last_name, username, avatar_url').in('id', otherIds.length ? otherIds : ['00000000-0000-0000-0000-000000000000']);
+  const pMap = {}; (profiles || []).forEach(p => pMap[p.id] = p);
+
+  listEl.innerHTML = convIds.map(cid => {
+    const m = (members || []).find(x => x.conversation_id === cid);
+    const p = m ? pMap[m.user_id] : null;
+    return `
+      <div class="conv-row" onclick="msgOpenChat('${cid}')">
+        <div class="row-av">${msgAvatarHtml(p)}</div>
+        <div>
+          <div class="row-name">${p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Operator' : 'Unknown'}</div>
+          <div class="row-handle">@${p?.username || '—'}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function msgOpenChat(convId) {
+  msgCurrentConvId = convId;
+  const { data: members } = await sb.from('conversation_members').select('user_id').eq('conversation_id', convId).neq('user_id', currentUserId);
+  const otherId = members?.[0]?.user_id;
+  const { data: p } = otherId ? await sb.from('profiles').select('*').eq('id', otherId).single() : { data: null };
+  document.getElementById('msg-chatAv').innerHTML = msgAvatarHtml(p);
+  document.getElementById('msg-chatName').textContent = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Operator' : 'Operator';
+  document.getElementById('msg-chatHandle').textContent = '@' + (p?.username || 'user');
+
+  msgShowView('chat');
+  await msgLoadMessages();
+  msgSubscribeRealtime();
+}
+
+async function msgLoadMessages() {
+  const { data } = await sb.from('messages').select('*').eq('conversation_id', msgCurrentConvId).order('created_at', { ascending: true });
+  const scroll = document.getElementById('msg-scroll');
+  scroll.innerHTML = '';
+  (data || []).forEach(msgAppendMessage);
+}
+function msgAppendMessage(msg) {
+  const scroll = document.getElementById('msg-scroll');
+  const div = document.createElement('div');
+  div.className = 'bubble ' + (msg.sender_id === currentUserId ? 'mine' : 'theirs');
+  div.textContent = msg.content;
+  scroll.appendChild(div);
+  scroll.scrollTop = scroll.scrollHeight;
+}
+function msgSubscribeRealtime() {
+  if (msgRealtimeChannel) sb.removeChannel(msgRealtimeChannel);
+  msgRealtimeChannel = sb.channel('conv-' + msgCurrentConvId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${msgCurrentConvId}` },
+      payload => { if (payload.new.sender_id !== currentUserId) msgAppendMessage(payload.new); })
+    .subscribe();
+}
+async function msgSendMessage() {
+  const input = document.getElementById('msg-textInput');
+  const content = input.value.trim();
+  if (!content || !msgCurrentConvId) return;
+  input.value = '';
+  msgAppendMessage({ sender_id: currentUserId, content });
+  const { error } = await sb.from('messages').insert({ conversation_id: msgCurrentConvId, sender_id: currentUserId, content });
+  if (error) alert(error.message);
+}
+async function msgInit() {
+  msgShowView('list');
+  if (msgRealtimeChannel) { sb.removeChannel(msgRealtimeChannel); msgRealtimeChannel = null; }
+  await msgLoadConversations();
+}
+
+// ── Shared background canvas ───────────────────────────────────────────────────
+const cv = document.getElementById('bgc');
+const cx = cv.getContext('2d');
+let W, H, pts = [];
+function rsz() { W = cv.width = cv.offsetWidth; H = cv.height = cv.offsetHeight; }
+function Pt() {
+  this.x = Math.random()*W; this.y = Math.random()*H;
+  this.s = Math.random()*1.1+0.2;
+  this.vx = (Math.random()-.5)*.2; this.vy = (Math.random()-.5)*.2;
+  this.col = Math.random()>.5 ? 'rgba(139,92,246,' : 'rgba(6,182,212,';
+  this.a = Math.random()*.45+.05;
+}
+function initBg() { rsz(); pts = []; for (let i = 0; i < 70; i++) pts.push(new Pt()); }
+let tt = 0;
+function draw() {
+  cx.clearRect(0,0,W,H); cx.fillStyle = '#03030a'; cx.fillRect(0,0,W,H);
+  cx.strokeStyle = 'rgba(139,92,246,0.04)'; cx.lineWidth = .5;
+  for (let x = 0; x < W; x += 48) { cx.beginPath(); cx.moveTo(x,0); cx.lineTo(x,H); cx.stroke(); }
+  for (let y = 0; y < H; y += 48) { cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+  tt += .003;
+  const g1 = cx.createRadialGradient(W*.85+Math.sin(tt)*30, H*.1, 0, W*.85, H*.1, 220);
+  g1.addColorStop(0,'rgba(139,92,246,0.2)'); g1.addColorStop(1,'transparent');
+  cx.fillStyle = g1; cx.fillRect(0,0,W,H);
+  const g2 = cx.createRadialGradient(W*.08+Math.cos(tt*.7)*20, H*.9, 0, W*.08, H*.9, 180);
+  g2.addColorStop(0,'rgba(6,182,212,0.15)'); g2.addColorStop(1,'transparent');
+  cx.fillStyle = g2; cx.fillRect(0,0,W,H);
+  pts.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0 || p.x > W) p.vx *= -1;
+    if (p.y < 0 || p.y > H) p.vy *= -1;
+    cx.beginPath(); cx.arc(p.x, p.y, p.s, 0, Math.PI*2);
+    cx.fillStyle = p.col + p.a + ')'; cx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+(async function boot() {
+  initBg(); draw();
+  suWireOtp(); suBuildGames(); msgBuildEmojiGrid();
+  window.addEventListener('resize', initBg);
+
+  const user = await refreshAuthState();
+  showPage(user ? 'app' : 'login');
+})();
+</script>
+</body>
+</html>
