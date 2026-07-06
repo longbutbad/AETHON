@@ -18,13 +18,24 @@ type Ctx = { startCall: (peer: CallPeer) => void; state: CallState };
 const CallContext = createContext<Ctx>({ startCall: () => {}, state: "idle" });
 export const useCall = () => useContext(CallContext);
 
-// STUN for same-network, plus a free public TURN relay (Open Relay Project) so
-// calls between different networks / the open internet can actually connect.
-// For production-grade reliability, swap in your own TURN provider's creds.
-const RTC_CONFIG: RTCConfiguration = {
-  iceServers: [
+// STUN handles same-network; TURN relays media between different networks.
+// Public TURN servers are unreliable, so allow overriding via env vars — set
+// NEXT_PUBLIC_TURN_URLS (comma-separated), NEXT_PUBLIC_TURN_USERNAME,
+// NEXT_PUBLIC_TURN_CREDENTIAL in Vercel with your own TURN provider's creds.
+function buildRtcConfig(): RTCConfiguration {
+  const iceServers: RTCIceServer[] = [
     { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
-    {
+  ];
+  const turnUrls = process.env.NEXT_PUBLIC_TURN_URLS;
+  if (turnUrls) {
+    iceServers.push({
+      urls: turnUrls.split(",").map((u) => u.trim()),
+      username: process.env.NEXT_PUBLIC_TURN_USERNAME,
+      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
+    });
+  } else {
+    // Fallback: free public Open Relay TURN (best-effort; may be down).
+    iceServers.push({
       urls: [
         "turn:openrelay.metered.ca:80",
         "turn:openrelay.metered.ca:443",
@@ -32,9 +43,11 @@ const RTC_CONFIG: RTCConfiguration = {
       ],
       username: "openrelayproject",
       credential: "openrelayproject",
-    },
-  ],
-};
+    });
+  }
+  return { iceServers };
+}
+const RTC_CONFIG = buildRtcConfig();
 
 type Signal =
   | { kind: "ring"; from: CallPeer; sdp: RTCSessionDescriptionInit }
@@ -56,6 +69,7 @@ export default function CallProvider({
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [connected, setConnected] = useState(false);
+  const [diag, setDiag] = useState("");
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -83,6 +97,7 @@ export default function CallProvider({
     setConnected(false);
     setMicOn(true);
     setCamOn(true);
+    setDiag("");
   }, [supabase]);
 
   // Open (or reuse) a broadcast channel to a peer's inbox for sending signals.
@@ -130,10 +145,15 @@ export default function CallProvider({
       pc.onicecandidate = (e) => {
         if (e.candidate) send(target.id, { kind: "ice", from: me.id, candidate: e.candidate.toJSON() });
       };
+      pc.oniceconnectionstatechange = () => {
+        console.log("[call] ICE state:", pc.iceConnectionState);
+        setDiag(`ICE: ${pc.iceConnectionState}`);
+      };
       pc.onconnectionstatechange = () => {
-        if (["failed", "disconnected", "closed"].includes(pc.connectionState)) {
-          // give it a moment for reconnection, then drop
-          if (pc.connectionState === "failed") hangUp(false);
+        console.log("[call] connection state:", pc.connectionState);
+        setDiag(`Connection: ${pc.connectionState}`);
+        if (pc.connectionState === "failed") {
+          setDiag("Connection failed — likely a network/firewall issue (needs a working TURN server).");
         }
       };
       return pc;
@@ -263,6 +283,7 @@ export default function CallProvider({
           connected={connected}
           micOn={micOn}
           camOn={camOn}
+          diag={diag}
           localVideoRef={localVideoRef}
           remoteVideoRef={remoteVideoRef}
           onAccept={acceptCall}
@@ -304,6 +325,7 @@ function CallOverlay({
   connected,
   micOn,
   camOn,
+  diag,
   localVideoRef,
   remoteVideoRef,
   onAccept,
@@ -317,6 +339,7 @@ function CallOverlay({
   connected: boolean;
   micOn: boolean;
   camOn: boolean;
+  diag: string;
   localVideoRef: React.RefObject<HTMLVideoElement | null>;
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
   onAccept: () => void;
@@ -334,9 +357,10 @@ function CallOverlay({
             <Avatar peer={peer} size={72} />
           </div>
           <div className="font-display text-lg font-bold text-gray-50">{peer?.name}</div>
-          <div className="mb-5 text-sm text-gray-500">
+          <div className="mb-1 text-sm text-gray-500">
             {state === "incoming" ? "Incoming call…" : "Calling…"}
           </div>
+          {diag && <div className="mb-4 text-[11px] text-gray-600">{diag}</div>}
           <div className="flex justify-center gap-3">
             {state === "incoming" && (
               <button
@@ -369,9 +393,10 @@ function CallOverlay({
           className="h-full w-full bg-black object-contain"
         />
         {!connected && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gray-400">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center text-gray-400">
             <Avatar peer={peer} size={80} />
             <span>Connecting to {peer?.name}…</span>
+            {diag && <span className="text-[11px] text-gray-500">{diag}</span>}
           </div>
         )}
         <video
@@ -382,33 +407,40 @@ function CallOverlay({
           className="absolute bottom-4 right-4 h-32 w-24 rounded-lg border border-white/20 bg-black object-cover sm:h-40 sm:w-32"
         />
       </div>
-      <div className="flex items-center justify-center gap-4 bg-[#0b0a16] py-4">
-        <button
-          onClick={onToggleMic}
-          className={
-            "flex h-12 w-12 items-center justify-center rounded-full text-xl " +
-            (micOn ? "bg-white/10 text-white" : "bg-red-500 text-white")
-          }
-          title={micOn ? "Mute" : "Unmute"}
-        >
-          {micOn ? "🎤" : "🔇"}
+      <div className="flex items-center justify-center gap-8 border-t border-white/10 bg-[#0b0a16] py-5">
+        <button onClick={onToggleMic} className="flex flex-col items-center gap-1.5">
+          <span
+            className={
+              "flex h-14 w-14 items-center justify-center rounded-full text-2xl " +
+              (micOn ? "bg-white/10 text-white hover:bg-white/20" : "bg-red-500 text-white")
+            }
+          >
+            {micOn ? "🎤" : "🔇"}
+          </span>
+          <span className="text-[11px] font-semibold text-gray-300">
+            {micOn ? "Mute" : "Unmute"}
+          </span>
         </button>
-        <button
-          onClick={onToggleCam}
-          className={
-            "flex h-12 w-12 items-center justify-center rounded-full text-xl " +
-            (camOn ? "bg-white/10 text-white" : "bg-red-500 text-white")
-          }
-          title={camOn ? "Camera off" : "Camera on"}
-        >
-          {camOn ? "📹" : "🚫"}
+
+        <button onClick={onToggleCam} className="flex flex-col items-center gap-1.5">
+          <span
+            className={
+              "flex h-14 w-14 items-center justify-center rounded-full text-2xl " +
+              (camOn ? "bg-white/10 text-white hover:bg-white/20" : "bg-red-500 text-white")
+            }
+          >
+            {camOn ? "📹" : "🚫"}
+          </span>
+          <span className="text-[11px] font-semibold text-gray-300">
+            {camOn ? "Camera" : "Camera On"}
+          </span>
         </button>
-        <button
-          onClick={onHangUp}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-xl text-white"
-          title="Hang up"
-        >
-          📞
+
+        <button onClick={onHangUp} className="flex flex-col items-center gap-1.5">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-2xl text-white hover:bg-red-700">
+            📞
+          </span>
+          <span className="text-[11px] font-semibold text-gray-300">Leave</span>
         </button>
       </div>
     </div>

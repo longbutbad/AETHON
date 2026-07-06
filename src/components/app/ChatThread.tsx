@@ -53,6 +53,7 @@ export default function ChatThread({
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const profilesRef = useRef(profiles);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     profilesRef.current = profiles;
@@ -109,32 +110,26 @@ export default function ChatThread({
       setMessages(msgs);
       scrollToBottom();
 
-      // Unique topic per mount so StrictMode's double-invoke can't collide with a
-      // not-yet-removed channel of the same name.
-      const topic = `conv-${conversationId}-${Math.random().toString(36).slice(2)}`;
-      channel = supabase
-        .channel(topic)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          async (payload) => {
-            const m = payload.new as Msg;
-            if (m.sender_id === me.id) return;
-            await fetchProfiles([m.sender_id]);
-            setMessages((prev) => [...prev, m]);
-            scrollToBottom();
-          },
-        )
+      // Live delivery via broadcast (reliable, not RLS-gated like postgres_changes).
+      // Everyone viewing this conversation subscribes to the same topic.
+      channel = supabase.channel(`chat-${conversationId}`, {
+        config: { broadcast: { self: false } },
+      });
+      channel
+        .on("broadcast", { event: "msg" }, async ({ payload }) => {
+          const m = payload as Msg;
+          if (m.sender_id === me.id) return;
+          await fetchProfiles([m.sender_id]);
+          setMessages((prev) => [...prev, m]);
+          scrollToBottom();
+        })
         .subscribe();
+      channelRef.current = channel;
     })();
 
     return () => {
       if (channel) supabase.removeChannel(channel);
+      channelRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, me.id, selfJoin]);
@@ -143,11 +138,12 @@ export default function ChatThread({
     const content = text.trim();
     if (!content) return;
     setText("");
-    setMessages((prev) => [
-      ...prev,
-      { sender_id: me.id, content, created_at: new Date().toISOString() },
-    ]);
+    const msg: Msg = { sender_id: me.id, content, created_at: new Date().toISOString() };
+    setMessages((prev) => [...prev, msg]);
     scrollToBottom();
+    // Broadcast for instant delivery to everyone in the conversation…
+    channelRef.current?.send({ type: "broadcast", event: "msg", payload: msg });
+    // …and persist so it's there on next load.
     const { error } = await supabase
       .from("messages")
       .insert({ conversation_id: conversationId, sender_id: me.id, content });
