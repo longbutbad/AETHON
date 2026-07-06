@@ -18,24 +18,30 @@ type Ctx = { startCall: (peer: CallPeer) => void; state: CallState };
 const CallContext = createContext<Ctx>({ startCall: () => {}, state: "idle" });
 export const useCall = () => useContext(CallContext);
 
-// STUN handles same-network; TURN relays media between different networks.
-// Public TURN servers are unreliable, so allow overriding via env vars — set
-// NEXT_PUBLIC_TURN_URLS (comma-separated), NEXT_PUBLIC_TURN_USERNAME,
-// NEXT_PUBLIC_TURN_CREDENTIAL in Vercel with your own TURN provider's creds.
-function buildRtcConfig(): RTCConfiguration {
-  const iceServers: RTCIceServer[] = [
+// ICE servers: Google STUN for same-network + a TURN relay for cross-network.
+// TURN credentials are fetched fresh from a Metered-style endpoint set in
+// NEXT_PUBLIC_METERED_TURN_URL (…/api/v1/turn/credentials?apiKey=…).
+async function getIceServers(): Promise<RTCIceServer[]> {
+  const base: RTCIceServer[] = [
     { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
   ];
-  const turnUrls = process.env.NEXT_PUBLIC_TURN_URLS;
-  if (turnUrls) {
-    iceServers.push({
-      urls: turnUrls.split(",").map((u) => u.trim()),
-      username: process.env.NEXT_PUBLIC_TURN_USERNAME,
-      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
-    });
-  } else {
-    // Fallback: free public Open Relay TURN (best-effort; may be down).
-    iceServers.push({
+  const url = process.env.NEXT_PUBLIC_METERED_TURN_URL;
+  if (url) {
+    try {
+      const res = await fetch(url);
+      const servers = (await res.json()) as RTCIceServer[];
+      if (Array.isArray(servers) && servers.length) {
+        console.log("[call] loaded TURN credentials");
+        return [...base, ...servers];
+      }
+    } catch (e) {
+      console.error("[call] TURN credential fetch failed:", e);
+    }
+  }
+  // Fallback: free public Open Relay TURN (best-effort; may be down).
+  return [
+    ...base,
+    {
       urls: [
         "turn:openrelay.metered.ca:80",
         "turn:openrelay.metered.ca:443",
@@ -43,11 +49,9 @@ function buildRtcConfig(): RTCConfiguration {
       ],
       username: "openrelayproject",
       credential: "openrelayproject",
-    });
-  }
-  return { iceServers };
+    },
+  ];
 }
-const RTC_CONFIG = buildRtcConfig();
 
 type Signal =
   | { kind: "ring"; from: CallPeer; sdp: RTCSessionDescriptionInit }
@@ -124,7 +128,8 @@ export default function CallProvider({
   // Build a peer connection wired to local media + signaling.
   const makePc = useCallback(
     async (target: CallPeer) => {
-      const pc = new RTCPeerConnection(RTC_CONFIG);
+      const iceServers = await getIceServers();
+      const pc = new RTCPeerConnection({ iceServers });
       pcRef.current = pc;
 
       const stream = await navigator.mediaDevices.getUserMedia({
