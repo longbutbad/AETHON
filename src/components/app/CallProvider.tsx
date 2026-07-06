@@ -18,12 +18,21 @@ type Ctx = { startCall: (peer: CallPeer) => void; state: CallState };
 const CallContext = createContext<Ctx>({ startCall: () => {}, state: "idle" });
 export const useCall = () => useContext(CallContext);
 
-// Public STUN servers. Works on the same network / localhost. Reliable calls
-// across the open internet also need a TURN relay (paid) — noted in the README.
+// STUN for same-network, plus a free public TURN relay (Open Relay Project) so
+// calls between different networks / the open internet can actually connect.
+// For production-grade reliability, swap in your own TURN provider's creds.
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
+    {
+      urls: [
+        "turn:openrelay.metered.ca:80",
+        "turn:openrelay.metered.ca:443",
+        "turn:openrelay.metered.ca:443?transport=tcp",
+      ],
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
   ],
 };
 

@@ -356,9 +356,9 @@ export default function ListeningRoom({ room, me }: { room: Room; me: Profile })
   };
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       {/* Player + queue */}
-      <div className="flex min-h-0 flex-col gap-4 lg:col-span-2">
+      <div className="flex flex-col gap-4 lg:col-span-2">
         <div className="overflow-hidden rounded-xl border border-white/5 bg-black">
           <div className="aspect-video w-full">
             <div id={`yt-${room.id}`} className="h-full w-full" />
@@ -449,7 +449,7 @@ export default function ListeningRoom({ room, me }: { room: Room; me: Profile })
       </div>
 
       {/* Now listening + chat */}
-      <div className="flex min-h-0 flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
           <div className="mb-2 text-[10px] font-bold tracking-[1.5px] text-gray-600">
             NOW LISTENING · {members.length}
@@ -472,7 +472,7 @@ export default function ListeningRoom({ room, me }: { room: Room; me: Profile })
         </div>
 
         {room.conversation_id && (
-          <div className="min-h-0 flex-1" style={{ minHeight: 360 }}>
+          <div className="h-[440px]">
             <ChatThread
               me={me}
               conversationId={room.conversation_id}
