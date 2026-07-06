@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 type CookiesToSet = { name: string; value: string; options: CookieOptions }[];
 
 // Routes that don't require an authenticated session.
-const PUBLIC_PATHS = ["/login", "/signup", "/auth"];
+const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/forgot-password", "/reset-password"];
 
 /**
  * Refreshes the Supabase auth session on every request and guards protected

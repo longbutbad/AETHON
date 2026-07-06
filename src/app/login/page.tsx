@@ -109,6 +109,11 @@ export default function LoginPage() {
         </NeonButton>
 
         <p className="mt-3 text-center text-[11px] text-gray-700">
+          <Link href="/forgot-password" className="text-violet hover:text-violet-light">
+            Forgot password?
+          </Link>
+        </p>
+        <p className="mt-1 text-center text-[11px] text-gray-700">
           Need an account?{" "}
           <Link href="/signup" className="font-display font-bold tracking-[1px] text-violet">
             ENLIST

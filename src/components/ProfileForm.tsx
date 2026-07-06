@@ -25,8 +25,9 @@ export default function ProfileForm({
 }) {
   const supabase = createClient();
 
-  const [first, setFirst] = useState(initial?.first_name ?? "");
-  const [last, setLast] = useState(initial?.last_name ?? "");
+  const [name, setName] = useState(
+    [initial?.first_name, initial?.last_name].filter(Boolean).join(" "),
+  );
   const [username, setUsername] = useState(initial?.username ?? "");
   const [dob, setDob] = useState(formatDob(initial?.dob ?? null));
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -50,8 +51,8 @@ export default function ProfileForm({
   const save = async () => {
     setErr("");
     setOk("");
-    if (!first.trim() || !username.trim()) {
-      setErr("First name and username are required");
+    if (!name.trim() || !username.trim()) {
+      setErr("Display name and username are required");
       return;
     }
     const dobIso = dob.trim() ? parseDob(dob) : null;
@@ -61,6 +62,12 @@ export default function ProfileForm({
     }
 
     setBusy(true);
+
+    // Store the single display name across first/last so displayName() works.
+    const parts = name.trim().split(/\s+/);
+    const firstName = parts.shift() ?? "";
+    const lastName = parts.length ? parts.join(" ") : null;
+
     let avatarUrl = initial?.avatar_url ?? undefined;
 
     if (avatarFile) {
@@ -79,8 +86,8 @@ export default function ProfileForm({
 
     const { error: dbErr } = await supabase.from("profiles").upsert({
       id: userId,
-      first_name: first.trim(),
-      last_name: last.trim() || null,
+      first_name: firstName,
+      last_name: lastName,
       username: username.trim(),
       dob: dobIso,
       ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
@@ -125,24 +132,12 @@ export default function ProfileForm({
       <Alert kind="error">{err}</Alert>
       <Alert kind="ok">{ok}</Alert>
 
-      <div className="flex gap-2">
-        <div className="flex-1">
-          <Field
-            label="First"
-            placeholder="Jordan"
-            value={first}
-            onChange={(e) => setFirst(e.target.value)}
-          />
-        </div>
-        <div className="flex-1">
-          <Field
-            label="Last"
-            placeholder="Reyes"
-            value={last}
-            onChange={(e) => setLast(e.target.value)}
-          />
-        </div>
-      </div>
+      <Field
+        label="Display name"
+        placeholder="Jordan Reyes"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
 
       <Field
         label="Username"

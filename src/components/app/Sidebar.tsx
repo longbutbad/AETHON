@@ -10,6 +10,7 @@ const NAV = [
   { label: "Friends", icon: "👥", href: "/friends" },
   { label: "Communities", icon: "🛡", href: "/communities" },
   { label: "Messages", icon: "✉", href: "/messages" },
+  { label: "Rooms", icon: "🎵", href: "/rooms" },
   { label: "Games", icon: "🎮", href: "/games" },
   { label: "Notifications", icon: "🔔", href: "/notifications" },
 ];
@@ -132,18 +133,6 @@ export default async function Sidebar({
             </Link>
           ))
         )}
-      </div>
-
-      {/* Pro card */}
-      <div className="m-3 rounded-xl border border-violet/20 bg-gradient-to-br from-violet/15 to-cyan/10 p-3">
-        <div className="font-display text-sm font-bold tracking-[1px] text-white">AETHON PRO</div>
-        <div className="mb-2 text-[11px] text-gray-400">Upgrade your experience</div>
-        <Link
-          href="/soon"
-          className="inline-block rounded-md bg-violet px-3 py-1 text-[11px] font-bold text-white transition hover:bg-violet-deep"
-        >
-          Go Premium
-        </Link>
       </div>
 
       <div className="border-t border-white/5 px-5 py-2.5">

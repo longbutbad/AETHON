@@ -50,6 +50,7 @@ export default function CallProvider({
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -61,6 +62,7 @@ export default function CallProvider({
     pcRef.current = null;
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
+    remoteStreamRef.current = null;
     if (peerChannelRef.current) {
       supabase.removeChannel(peerChannelRef.current);
       peerChannelRef.current = null;
@@ -110,6 +112,8 @@ export default function CallProvider({
       stream.getTracks().forEach((t) => pc.addTrack(t, stream));
 
       pc.ontrack = (e) => {
+        // Stash the stream; the effect below attaches it once the <video> mounts.
+        remoteStreamRef.current = e.streams[0];
         if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0];
         setConnected(true);
         setState("in-call");
@@ -212,10 +216,16 @@ export default function CallProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me.id, state]);
 
-  // Attach local stream to the video element whenever it mounts.
+  // Attach local + remote streams to their <video> elements whenever the call
+  // view (re)mounts. This is what makes you actually see/hear the other person —
+  // ontrack can fire before the element exists, so we re-attach here.
   useEffect(() => {
     if (localVideoRef.current && localStreamRef.current) {
       localVideoRef.current.srcObject = localStreamRef.current;
+    }
+    if (remoteVideoRef.current && remoteStreamRef.current) {
+      remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      remoteVideoRef.current.play?.().catch(() => {});
     }
   }, [state, connected]);
 
